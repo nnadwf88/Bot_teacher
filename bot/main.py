@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import os
 import ssl
 
 import certifi
@@ -18,7 +19,10 @@ from bot.handlers import assignments, common, digest, tracking
 from bot.middlewares.db import DbSessionMiddleware
 from bot.middlewares.registration import EnsureRegisteredMiddleware
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
+logging.basicConfig(
+    level=os.environ.get("LOG_LEVEL", "INFO").upper(),
+    format="%(asctime)s %(levelname)s %(name)s: %(message)s",
+)
 logger = logging.getLogger(__name__)
 
 
