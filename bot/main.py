@@ -2,9 +2,12 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import ssl
 
+import certifi
 from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
+from aiogram.client.session.aiohttp import AiohttpSession
 from aiogram.enums import ParseMode
 from aiogram.fsm.storage.memory import MemoryStorage
 
@@ -19,12 +22,31 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name
 logger = logging.getLogger(__name__)
 
 
+class ExtraTrustAiohttpSession(AiohttpSession):
+    """AiohttpSession that also trusts one extra CA, for TLS-inspecting proxies."""
+
+    def __init__(self, extra_ca_bundle: str, **kwargs: object) -> None:
+        super().__init__(**kwargs)
+        context = ssl.create_default_context(cafile=certifi.where())
+        context.load_verify_locations(cafile=extra_ca_bundle)
+        self._connector_init["ssl"] = context
+
+
+def _build_bot(config: Config) -> Bot:
+    session = ExtraTrustAiohttpSession(config.extra_ca_bundle) if config.extra_ca_bundle else None
+    return Bot(
+        token=config.bot_token,
+        session=session,
+        default=DefaultBotProperties(parse_mode=ParseMode.HTML),
+    )
+
+
 async def main() -> None:
     config = Config.from_env()
     sessionmaker = init_engine(config.database_path)
     await create_all()
 
-    bot = Bot(token=config.bot_token, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
+    bot = _build_bot(config)
     dp = Dispatcher(storage=MemoryStorage())
 
     db_middleware = DbSessionMiddleware(sessionmaker)

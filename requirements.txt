@@ -3,3 +3,4 @@ SQLAlchemy>=2.0
 aiosqlite>=0.19
 python-dotenv>=1.0
 tzdata>=2024.1
+certifi>=2024.2.2
