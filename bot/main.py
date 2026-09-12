@@ -49,6 +49,15 @@ async def main() -> None:
     bot = _build_bot(config)
     dp = Dispatcher(storage=MemoryStorage())
 
+    async def log_every_update(handler, event, data):
+        # Metadata only (never message text) — useful to confirm updates are
+        # actually arriving without leaking participants' personal reflections
+        # into the logs.
+        logger.debug("Incoming update #%s: %s", event.update_id, event.event_type)
+        return await handler(event, data)
+
+    dp.update.outer_middleware(log_every_update)
+
     db_middleware = DbSessionMiddleware(sessionmaker)
     registration_middleware = EnsureRegisteredMiddleware(config)
     for observer in (dp.message, dp.callback_query):
