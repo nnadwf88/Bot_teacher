@@ -1,0 +1,7 @@
+{
+  "extraKnownMarketplaces": {
+    "bencium-marketplace": {
+      "source": { "source": "github", "repo": "bencium/bencium-marketplace" }
+    }
+  }
+}
